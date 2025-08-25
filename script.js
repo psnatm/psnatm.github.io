@@ -7,25 +7,45 @@ document.addEventListener('DOMContentLoaded', () => {
     let mps = [];
     const placeholderRegex = /\{([^{}?\n]+)\?\}/g;
 
+    /**
+     * A robust CSV parser that handles commas inside quoted fields.
+     * @param {string} text The raw CSV text.
+     * @returns {Array<Object>} An array of objects representing the CSV rows.
+     */
     const parseCSV = (text) => {
         const lines = text.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
         const data = [];
+        const valueRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+
         for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+            if (lines[i].trim() === '') continue;
+
+            const values = lines[i].split(valueRegex);
+
             if (values.length === headers.length) {
                 let entry = {};
                 headers.forEach((header, index) => {
-                    entry[header] = values[index];
+                    entry[header] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : '';
                 });
                 data.push(entry);
+            } else {
+                console.warn(`Skipping malformed CSV line ${i + 1}:`, lines[i]);
             }
         }
         return data;
     };
     
     const populateMPDropdown = () => {
-        const electorateMPs = mps.filter(mp => mp['Job Title'] !== 'List Member' && mp['Electorate']);
+        mpSelect.innerHTML = ''; // Clear "Loading..."
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = "";
+        placeholderOption.textContent = "Select your electorate MP...";
+        placeholderOption.disabled = true;
+        placeholderOption.selected = true;
+        mpSelect.appendChild(placeholderOption);
+
+        const electorateMPs = mps.filter(mp => mp['Job Title'] && !mp['Job Title'].includes('List Member') && mp['Electorate']);
         electorateMPs.sort((a, b) => a.Contact.localeCompare(b.Contact));
 
         electorateMPs.forEach(mp => {
@@ -55,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
             inputEl.type = 'text';
             inputEl.id = `input-${label.replace(/\s+/g, '-')}`;
             inputEl.dataset.placeholder = `{${label}?}`;
+            inputEl.setAttribute('aria-label', label);
+
 
             formGroup.appendChild(labelEl);
             formGroup.appendChild(inputEl);
@@ -64,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const generateEmail = () => {
         const selectedOption = mpSelect.options[mpSelect.selectedIndex];
-        if (!selectedOption) {
+        if (!selectedOption || selectedOption.disabled) {
             alert('Please select an MP.');
             return;
         }
@@ -81,39 +103,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Replace dynamic {Question?} placeholders
+        let allFieldsFilled = true;
         const dynamicInputs = dynamicFormFieldsContainer.querySelectorAll('input');
         dynamicInputs.forEach(input => {
             const placeholder = input.dataset.placeholder;
             const value = input.value;
             if (!value) {
                 alert(`Please fill out the "${placeholder.slice(1, -2)}" field.`);
-                throw new Error('Field is empty'); // Stop execution
+                allFieldsFilled = false;
             }
-            // Use a regex with a global flag to replace all occurrences
             const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
             emailBody = emailBody.replace(regex, value);
         });
 
+        if (!allFieldsFilled) {
+             return; // Stop if a field was empty
+        }
+
         window.location.href = `mailto:${mpEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
     };
 
-    // --- Event Listeners ---
+    // --- Main Execution ---
     fetch('data/mps.csv')
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
         .then(csvText => {
             mps = parseCSV(csvText);
             populateMPDropdown();
+        })
+        .catch(error => {
+            console.error('Error fetching or parsing CSV:', error);
+            mpSelect.innerHTML = '<option value="">Could not load MP data</option>';
         });
 
     emailTemplateTextarea.addEventListener('input', generateFormFromTemplate);
-    generateEmailButton.addEventListener('click', () => {
-        try {
-            generateEmail();
-        } catch (error) {
-            console.warn(error.message);
-        }
-    });
+    generateEmailButton.addEventListener('click', generateEmail);
 
-    // Initial setup
+    // Initial form generation
     generateFormFromTemplate();
 });
