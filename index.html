@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palestine Solidarity Network Aotearoa - Email Your MP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+             <img src="https://i.postimg.cc/9F0Y8z4R/palestine-solidarity-network-aotearoa-logo.png" alt="Palestine Solidarity Network Aotearoa Logo" style="max-height: 80px;">
+        </div>
+        <nav>
+            <a href="#">HOME</a>
+            <a href="#">BDS</a>
+            <a href="#">PETITION</a>
+            <a href="#">NEWSLETTERS</a>
+            <a href="#">RESOURCES</a>
+            <a href="#">PRESS RELEASES</a>
+            <a href="#">SHOP</a>
+            <a href="#">DONATE</a>
+            <a href="#">CONTACT</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1>Committed to building and strengthening campaigns for a free Palestine.</h1>
+        </div>
+
+        <div class="email-generator">
+            <h2>Email Your Electorate MP</h2>
+            <p>Select your MP, fill in the details, and click "Generate Email" to open the email in your default mail client.</p>
+
+            <div class="form-container">
+                <div class="form-section" id="user-input-section">
+                    <h3>Step 1: Your Details</h3>
+                    <label for="mp-select">Select Your MP:</label>
+                    <select id="mp-select" name="mp"></select>
+
+                    <!-- Dynamic form fields will be injected here -->
+                    <div id="dynamic-form-fields"></div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Step 2: Edit the Template (Optional)</h3>
+                    <label for="email-template">Email Template:</label>
+                    <textarea id="email-template" name="email-template" rows="20">
+Dear {mp.Contact},
+
+My name is {Your Full Name?} and I am a constituent writing to you from {Your Suburb or Town?}.
+
+I am writing to you today to express my profound distress regarding the ongoing humanitarian crisis in Palestine. The loss of innocent lives, the destruction of homes, and the denial of basic human rights are unacceptable and demand immediate action from the international community.
+
+New Zealand has a proud history of standing up for justice and human rights on the global stage. I urge you, as my elected representative, to advocate within Parliament for the New Zealand government to take a stronger, more decisive stance.
+
+Specifically, I ask that you please push for the following actions:
+1.  Publicly call for an immediate and permanent ceasefire.
+2.  Increase humanitarian aid to Gaza and the West Bank.
+3.  Support international efforts to investigate all credible reports of war crimes and hold perpetrators accountable.
+4.  Recognise the State of Palestine.
+
+The people of Palestine have endured decades of occupation and hardship. It is our moral obligation to speak out and act in solidarity with them.
+
+Thank you for your time and attention to this urgent matter. I look forward to your response outlining the steps you will take.
+
+Sincerely,
+{Your Full Name?}
+                    </textarea>
+                </div>
+            </div>
+
+            <button id="generate-email">Generate Email</button>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
